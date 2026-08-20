@@ -2,7 +2,7 @@ name: Toffee Live Scraper
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # প্রতি ৪ ঘণ্টায়
+    - cron: '0 */4 * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,6 +11,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.PAT_TOKEN }}  # এটি যোগ করুন
     
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -18,16 +20,17 @@ jobs:
         python-version: '3.11'
     
     - name: Install dependencies
-      run: |
-        pip install requests
+      run: pip install requests
     
     - name: Run Toffee Scraper
       run: python scraper/toffee_scraper.py
     
     - name: Commit playlist
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # PAT ব্যবহার করুন
       run: |
         git config user.name "GitHub Action"
         git config user.email "action@github.com"
         git add output/
         git diff --staged --quiet || git commit -m "Update Toffee playlist - $(date '+%Y-%m-%d %H:%M')"
-        git push
+        git push https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
