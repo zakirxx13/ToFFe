@@ -1,52 +1,33 @@
-name: Update Toffee Live Playlist
+name: Toffee Live Scraper
 
 on:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 */4 * * *'  # প্রতি ৪ ঘণ্টায়
   workflow_dispatch:
-
-# Add this permissions block
-permissions:
-  contents: write
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        fetch-depth: 0
-        
-    - name: Set up Python
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+    
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
-        playwright install chromium
-        
-    - name: Create output directory
-      run: mkdir -p output/headers
-      
-    - name: Run scraper
-      run: python scraper.py
-      
-    - name: Commit and push changes
+        pip install requests
+    
+    - name: Run Toffee Scraper
+      run: python scraper/toffee_scraper.py
+    
+    - name: Commit playlist
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
         git add output/
-        
-        if git diff --cached --quiet; then
-          echo "ℹ️ No changes to commit"
-        else
-          git commit -m "🔄 Update playlist - $(date -u '+%Y-%m-%d %H:%M UTC')"
-          git push
-          echo "✅ Playlist updated successfully"
-        fi
+        git diff --staged --quiet || git commit -m "Update Toffee playlist - $(date '+%Y-%m-%d %H:%M')"
+        git push
