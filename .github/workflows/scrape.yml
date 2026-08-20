@@ -2,11 +2,12 @@ name: Update Toffee Live Playlist
 
 on:
   schedule:
-    # প্রতি ৩ ঘণ্টায় আপডেট
     - cron: '0 */3 * * *'
   workflow_dispatch:
-  push:
-    branches: [ main ]
+
+# Add this permissions block
+permissions:
+  contents: write
 
 jobs:
   scrape:
@@ -15,7 +16,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+        
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -37,12 +41,12 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-        # Check if there are changes
-        if [[ -n "$(git status --porcelain)" ]]; then
-          git add output/
+        git add output/
+        
+        if git diff --cached --quiet; then
+          echo "ℹ️ No changes to commit"
+        else
           git commit -m "🔄 Update playlist - $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
           echo "✅ Playlist updated successfully"
-        else
-          echo "ℹ️ No changes to commit"
         fi
